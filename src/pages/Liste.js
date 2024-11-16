@@ -1,98 +1,138 @@
-// import React from 'react';
-// import { View, Text } from 'react-native';
-
-// const Liste = ({ navigation }) => {
-//     return (
-//         <View>
-//             <Text>Liste</Text>
-//         </View>
-//     );
-// };
-
-// export default Liste;
-
-
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 
-const Liste = () => {
-    // Exemple de données pour la liste
-    const [items, setItems] = useState([
-        { id: '1', name: 'Livre A', checked: false },
-        { id: '2', name: 'Livre B', checked: false },
-        { id: '3', name: 'Livre C', checked: false },
+const GestionListe = () => {
+    // État de la liste
+    const [liste, setListe] = useState([
+        { id: '1', text: 'Élément 1' },
+        { id: '2', text: 'Élément 2' },
     ]);
 
-    // Fonction pour gérer le changement d'état des checkbox
-    const toggleCheckbox = (id) => {
-        setItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, checked: !item.checked } : item
-            )
-        );
+    // État pour le texte d'ajout/modification
+    const [nouveauTexte, setNouveauTexte] = useState('');
+    const [idEnCours, setIdEnCours] = useState(null); // ID de l'élément à modifier (si applicable)
+
+    // Ajouter une ligne
+    const ajouterLigne = () => {
+        if (nouveauTexte.trim() === '') {
+            return;
+        }
+
+        if (idEnCours) {
+            // Modifier un élément existant
+            const nouvelleListe = liste.map((item) =>
+                item.id === idEnCours ? { ...item, text: nouveauTexte } : item
+            );
+            setListe(nouvelleListe);
+            setIdEnCours(null); // Réinitialiser après modification
+        } else {
+            // Ajouter un nouvel élément
+            setListe([...liste, { id: Date.now().toString(), text: nouveauTexte }]);
+        }
+        setNouveauTexte(''); // Réinitialiser le champ
     };
 
-    // Composant pour afficher chaque élément de la liste
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={styles.item}
-            onPress={() => toggleCheckbox(item.id)}
-        >
-            <View style={styles.checkbox}>
-                {item.checked && <View style={styles.checked} />}
-            </View>
-            <Text style={styles.text}>{item.name}</Text>
-        </TouchableOpacity>
-    );
+    // Supprimer une ligne
+    const supprimerLigne = (id) => {
+        const nouvelleListe = liste.filter((item) => item.id !== id);
+        setListe(nouvelleListe);
+    };
+
+    // Préparer la modification
+    const preparerModification = (item) => {
+        setNouveauTexte(item.text);
+        setIdEnCours(item.id);
+    };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Ma Liste</Text>
+            {/* Liste affichée */}
             <FlatList
-                data={items}
+                data={liste}
                 keyExtractor={(item) => item.id}
-                renderItem={renderItem}
+                renderItem={({ item }) => (
+                    <View style={styles.itemContainer}>
+                        <Text style={styles.itemText}>{item.text}</Text>
+                        <TouchableOpacity
+                            style={styles.editButton}
+                            onPress={() => preparerModification(item)}
+                        >
+                            <Text style={styles.buttonText}>Modifier</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => supprimerLigne(item.id)}
+                        >
+                            <Text style={styles.buttonText}>Supprimer</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             />
+
+            {/* Formulaire d'ajout/modification */}
+            <View style={styles.form}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Ajouter/modifier un élément"
+                    value={nouveauTexte}
+                    onChangeText={(text) => setNouveauTexte(text)}
+                />
+                <Button title={idEnCours ? 'Modifier' : 'Ajouter'} onPress={ajouterLigne} />
+            </View>
         </View>
     );
 };
 
-// Styles pour le composant
+// Styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: '#f5f5f5',
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    item: {
+    itemContainer: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
         padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        marginBottom: 10,
+        backgroundColor: '#ffffff',
+        borderRadius: 5,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 2,
     },
-    checkbox: {
-        width: 20,
-        height: 20,
-        borderWidth: 1,
-        borderColor: '#000',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-    },
-    checked: {
-        width: 12,
-        height: 12,
-        backgroundColor: '#000',
-    },
-    text: {
+    itemText: {
         fontSize: 16,
+        flex: 1,
+    },
+    editButton: {
+        marginRight: 10,
+        padding: 5,
+        backgroundColor: '#007bff',
+        borderRadius: 5,
+    },
+    deleteButton: {
+        padding: 5,
+        backgroundColor: '#dc3545',
+        borderRadius: 5,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 14,
+    },
+    form: {
+        marginTop: 20,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 5,
+        padding: 10,
+        marginBottom: 10,
+        backgroundColor: '#ffffff',
     },
 });
 
-export default Liste;
+export default GestionListe;
